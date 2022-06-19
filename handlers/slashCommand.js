@@ -3,7 +3,7 @@
 // #Discord.js #V13 #HungChannels #Code
 const { readdirSync } = require('fs');
 const slashCommands = [];
-const { slashallow1, slashallow2, slashallow3, slashallow4 } = require('../config.json');
+const { slashallow1, slashallow2 } = require('../config.json');
 module.exports = async (client) => {
     let count = 0;
     readdirSync('./slashcommands').forEach(dir => {

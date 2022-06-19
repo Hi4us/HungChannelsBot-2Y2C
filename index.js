@@ -8,8 +8,9 @@ const { Client, Collection, MessageEmbed, version } = require('discord.js');
 const client = new Client({ intents: 32767, partials: ['MESSAGE', 'CHANNEL', 'REACTION'], allowedMentions: { parse: ['users'], repliedUser: false }, disableEveryone: true, disableMentions: 'everyone' });
 const { ownerid, ratelimitchannel, errorchannel } = require('./config.json');
 const { GiveawaysManager } = require('discord-giveaways');
-const giveawayModel = require('./models/giveaways.js')
+const giveawayModel = require('./models/giveaways.js');
 const Levels = require('discord-xp');
+const { DisTube } = require('distube');
 
 // Không được xóa từ dòng 15 đến dòng 33 không bot sẽ không chạy, bạn chỉ việc sửa lại token và thông tin tại config.json và .env
 let hungchannelstv = '364714303351160833'
@@ -19,11 +20,11 @@ const config = require('./config.json')
 console.log(`[CONFIG] Đã load thành công file config.json`)
 if (hungchannelstv === '364714303351160833') {
     console.log(`[CHECK] Đã xác minh thành công`)
-    console.log(`[DISCORD.JS] Bạn đang sử dụng discord.js phiên bản ${version}`)
     console.log(`[ADMIN] https://www.facebook.com/HungChannels.TV`)
     console.log(`[ADMIN] Thanks to https://github.com/phamleduy04, https://github.com/MoonVN571, https://github.com/VaitoSoi`)
     console.log(`[ADMIN] So many thanks to @0Channy, @BuronKanzaki`)
     console.log(`[ADMIN] And then say goodbye 2y2c`)
+    console.log(`[DISCORD.JS] Bạn đang sử dụng discord.js phiên bản ${version}`)
     try { require('dotenv').config() }
     catch (e) { console.log(`[ERROR] Đã xảy ra lỗi khi login, lỗi: ${e}`) }
     client.login(process.env.DISCORD_TOKEN, err => console.log(`[LOGIN] Đã xảy ra lỗi khi login, lỗi: ${err}`));
@@ -51,6 +52,13 @@ client.categories = new Collection();
 client.interactions = new Collection();
 client.cooldowns = new Collection();
 client.snipes = new Collection();
+client.emotes = require('./hungchannelstv/config.json').emoji;
+client.distube = new DisTube(client, {
+    leaveOnStop: false,
+    emitNewSongOnly: true,
+    emitAddSongWhenCreatingQueue: false,
+    emitAddListWhenCreatingQueue: false,
+});
 
 // Command/Event handlers by https://github.com/phamleduy04
 ['command', 'event', 'slashCommand'].forEach(handler => require(`./handlers/${handler}`)(client));
@@ -140,5 +148,34 @@ client.on('error', async (error) => {
         ]
     })
 });
+
+const status = (queue) =>
+    `Âm lượng: \`${queue.volume}%\` | Filter: \`${queue.filters.join(', ') || 'Tắt'
+    }\` | Loop: \`${queue.repeatMode
+        ? queue.repeatMode === 2
+            ? 'Tất cả hàng chờ'
+            : 'Chỉ bài này'
+        : 'Tắt'
+    }\` | Autoplay: \`${queue.autoplay ? 'Bật' : 'Tắt'}\``;
+client.distube.on('playSong', (queue, song) =>
+    queue.textChannel.send(`${client.emotes.play} | Đang phát \`${song.name}\` - \`${song.formattedDuration}\`\nNgười yêu cầu: ${song.user}\n${status(queue)}`)
+)
+client.distube.on('addSong', (queue, song) =>
+    queue.textChannel.send(`${client.emotes.success} | Đã thêm ${song.name} - \`${song.formattedDuration}\` vào hàng chờ bởi ${song.user}`)
+)
+client.distube.on('addList', (queue, playlist) =>
+    queue.textChannel.send(
+        `${client.emotes.success} | Đã thêm \`${playlist.name}\` playlist (${playlist.songs.length} bài) vào hàng chờ\n${status(queue)}`
+    )
+)
+client.distube.on('error', (channel, e) => {
+    channel.send(`${client.emotes.error} | Đã xảy ra lỗi: ${e.toString().slice(0, 1974)}`)
+    console.error(e)
+})
+client.distube.on('empty', channel => channel.send('Voice chat không có người, đang thoát khỏi voice chat'))
+client.distube.on('searchNoResult', (message, query) =>
+    message.channel.send(`${client.emotes.error} | Không có kết quả cho \`${query}\``)
+)
+client.distube.on('finish', queue => queue.textChannel.send(''))
 
 // https://www.facebook.com/HungChannels.TV
