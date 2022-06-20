@@ -176,6 +176,6 @@ client.distube.on('empty', channel => channel.send('Voice chat không có ngư�
 client.distube.on('searchNoResult', (message, query) =>
     message.channel.send(`${client.emotes.error} | Không có kết quả cho \`${query}\``)
 )
-client.distube.on('finish', queue => queue.textChannel.send(''))
+client.distube.on('finish', queue => queue.textChannel.send(`${client.emotes.success} | Đã hết hàng chờ`))
 
 // https://www.facebook.com/HungChannels.TV
