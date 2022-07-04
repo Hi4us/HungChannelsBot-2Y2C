@@ -10,6 +10,6 @@ module.exports = async (client) => {
     client.user.setPresence({ activities: [{ name: '', type: 'PLAYING' }], status: 'online' });
     console.log(`[READY] ${client.user.tag} đang hoạt động | Admin: ${HungChannels.tag}`);
     keepAlive(client);
-    // createBot(client);
-    // console.log(`[2Y2C] Đã kích hoạt livechat | Admin: ${HungChannels.tag}`);
+    createBot(client);
+    console.log(`[2Y2C] Đã kích hoạt livechat | Admin: ${HungChannels.tag}`);
 }

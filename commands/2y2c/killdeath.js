@@ -42,7 +42,7 @@ module.exports = {
                 }
                 )
             } else {
-                message.channel.send('Không tìm thấy data')
+                message.channel.send('Không tìm thấy dữ liệu')
             }
         })
     }
