@@ -12,7 +12,7 @@ const giveawayModel = require('./models/giveaways.js');
 const Levels = require('discord-xp');
 const { DisTube } = require('distube');
 
-// Không được xóa từ dòng 15 đến dòng 33 không bot sẽ không chạy, bạn chỉ việc sửa lại token và thông tin tại config.json và .env
+// Không được xóa từ dòng 16 đến dòng 34 không bot sẽ không chạy, bạn chỉ việc sửa lại token và thông tin tại config.json và .env
 let hungchannelstv = '364714303351160833'
 // Check admin
 const HungChannels = client.users.fetch(ownerid);
@@ -109,7 +109,7 @@ const manager = new GiveawayManagerWithOwnDatabase(client, {
 
 client.giveawaysManager = manager;
 
-// Ratelimjt and error by https://github.com/VaitoSoi
+// Ratelimit and error by https://github.com/VaitoSoi
 client.on('rateLimit', async (rateLimit) => {
     const channel = await client.channels.fetch(ratelimitchannel)
     if (!channel) return
