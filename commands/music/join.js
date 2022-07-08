@@ -2,7 +2,7 @@
 // Code by Hùng Channels
 // #Discord.js #V13 #HungChannels #Code
 require('dotenv').config();
-const { Constants } = require('discord.js')
+const { Constants } = require('discord.js');
 module.exports = {
   name: `join`,
   aliases: [`join`, `move`],

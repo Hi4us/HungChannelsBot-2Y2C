@@ -8,7 +8,7 @@ const util = require('minecraft-server-util');
 const { Client, MessageEmbed, Message } = require('discord.js');
 const ms = require('ms');
 const { env } = require('process');
-const { ownerid, livechat1, livechat2 } = require('../config.json');
+const { ownerid, livechat } = require('../config.json');
 const blacklist = require('../models/blacklist.js');
 const info = {
     name: env.MC_NAME,
@@ -16,7 +16,7 @@ const info = {
     version: env.MC_VERSION,
     ip: env.MC_IP,
     port: env.MC_PORT
-}
+};
 const color = {
     red: '#f00c0c',
     yellow: '#e5f00c',
@@ -25,7 +25,7 @@ const color = {
     blue: '#09bced',
     purple: '#a009e0',
     blue2: '#094ded'
-}
+};
 
 /**
  * @param {Client} client
@@ -59,22 +59,23 @@ function createBot(client) {
     let logintime = 0
 
     /**
-     * 
      * @param {MessageEmbed} embed 
      * @param {Message} msg
      * @param {String} color
      */
     async function send(embed, msg, color) {
         if (embed) {
-            const channel1 = client.channels.cache.get(livechat1);
-            const channel2 = client.channels.cache.get(livechat2);
-            if (!channel1 || !channel2) return;
-            channel1.send({ embeds: [embed] });
-            channel2.send({ embeds: [embed] });
+            const channel = client.channels.cache.get(livechat);
+            if (!channel) return;
+            try {
+                if (embed && embed !== '') channel.send({ embeds: [embed] })
+                else channel.send(await codeblockGenerator(msg, color))
+            } catch (e) {
+                console.log(e)
+            }
         }
     }
     /**
-     * 
      * @param {String} msg 
      * @param {String} color 
      * @returns 
@@ -101,7 +102,6 @@ function createBot(client) {
         }
     }
     /**
-     * 
      * @param {String} time 
      * @param {Boolean} now 
      */
@@ -283,7 +283,15 @@ function createBot(client) {
             send(embed, embed.title ? embed.title : embed.description, 'blue')
         }
     });
-
+    // Random number
+    function random() {
+        let random1 = Math.floor(Math.random() * 10)
+        let random2 = Math.floor(Math.random() * 10)
+        let random3 = Math.floor(Math.random() * 10)
+        let random4 = Math.floor(Math.random() * 10)
+        let random5 = Math.floor(Math.random() * 10)
+        return `${random1}${random2}${random3}${random4}${random5}`
+    }
     // Chat to game (Discord)
     client.on('messageCreate', async (message, args) => {
         let mentionprefix = message.content.match(new RegExp(`<@!?(${client.user.id})>`, `gi`));
@@ -292,7 +300,7 @@ function createBot(client) {
         blacklist.findOne({ id: message.author.id }, async (err, data) => {
             if (err) throw err;
             if (!data) {
-                if (message.channel.id === livechat1 || message.channel.id === livechat2) {
+                if (message.channel.id === livechat) {
                     if (message.content.startsWith(prefix)) return;
                     if (message.author.id === ownerid) {
                         message.react('✅');
@@ -356,10 +364,8 @@ function createBot(client) {
         }, ms(`${rejoin}m`));
     });
     /**
-   *
-   * Command của bot ingame
-   *
-   */
+    * Command của bot ingame
+    */
     // Server
     minecraftbot.addChatPattern('server', /<(.+)> (?:og.server|!server)/, { parse: true });
     minecraftbot.on('chat:server', async () => {
@@ -439,7 +445,7 @@ function createBot(client) {
     const kill30 = /^(.+) bị bốc hơi$/;
 
     // Nhập vào database
-    const kd = require('../models/kd');
+    const kd = require('../models/kd.js');
     const date = new Date();
     const joinDate = `Ng ${date.getDate()},Thg ${date.getMonth() + 1},Năm ${date.getFullYear()}`;
 
