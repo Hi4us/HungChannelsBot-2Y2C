@@ -110,7 +110,7 @@ function createBot(client) {
         end = false
         prepare = false
         restart = false
-        let server = '2y2c.org'
+        let server = ''
         logintime++
         if (move == 1) { server = 'Pin'; minecraftbot.afk.stop() }
         else if (move == 2) { server = 'Queue'; minecraftbot.afk.stop() }
@@ -338,7 +338,7 @@ function createBot(client) {
     minecraftbot.on('end', (reason) => {
         end = true;
         let res = reason
-        if (kickcount < 2) { rejoin = 1; kickcount++ }
+        if (kickcount < 2) { rejoin = 5; kickcount++ }
         else { rejoin = 5; }
         if (reason.toString().toLowerCase() == 'Server Restart') { rejoin = 5; restart = true }
         if (prepare === true && reason.toString().toLowerCase() == 'Server Restart') restartsend('', true)
