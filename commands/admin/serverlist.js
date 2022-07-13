@@ -2,7 +2,7 @@
 // Code by Hùng Channels
 // #Discord.js #V13 #HungChannels #Code
 require('dotenv').config();
-const { MessageEmbed } = require("discord.js");
+const { MessageEmbed } = require('discord.js');
 const { ownerid } = require('../../config.json');
 module.exports = {
   name: `serverlist`,

@@ -7,10 +7,10 @@ const blacklist = require('../../models/blacklist.js');
 const { Message } = require('discord.js');
 module.exports = {
     name: `addblacklist`,
-    aliases: [`addblacklist`],
+    aliases: [`addblacklist`, `themblacklist`, `abl`],
     category: `admin`,
     description: `Cấm người dùng sử dụng bot(chỉ admin sử dụng)`,
-    usage: `${process.env.DISCORD_PREFIX}addblacklist <id>`,
+    usage: `${process.env.DISCORD_PREFIX}addblacklist <tag>`,
     /**
      * @param {Message} message
      */

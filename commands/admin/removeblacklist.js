@@ -6,10 +6,10 @@ const { ownerid } = require('../../config.json');
 const blacklist = require('../../models/blacklist.js');
 module.exports = {
     name: `removeblacklist`,
-    aliases: [`removeblacklist`],
+    aliases: [`removeblacklist`, `xoablacklist`, `rbl`],
     category: `admin`,
     description: `Bỏ cấm người dùng sử dụng bot(chỉ admin sử dụng)`,
-    usage: `${process.env.DISCORD_PREFIX}removeblacklist <id>`,
+    usage: `${process.env.DISCORD_PREFIX}removeblacklist <tag>`,
     run: async (client, message, args) => {
         if (message.author.id !== ownerid) return message.reply(`Bạn phải là admin để sử dụng lệnh này`);
         const User = message.mentions.members.first();
