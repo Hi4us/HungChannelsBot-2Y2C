@@ -3,8 +3,8 @@
 // #Discord.js #V13 #HungChannels #Code
 require('dotenv').config();
 const { ownerid } = require('../../config.json');
-const blacklist = require('../../models/blacklist.js')
-const { Message } = require('discord.js')
+const blacklist = require('../../models/blacklist.js');
+const { Message } = require('discord.js');
 module.exports = {
     name: `addblacklist`,
     aliases: [`addblacklist`],
@@ -15,7 +15,7 @@ module.exports = {
      * @param {Message} message
      */
     run: async (client, message, args) => {
-        if (!message.author.id === ownerid) return message.reply(`Bạn phải là admin để sử dụng lệnh này`);
+        if (message.author.id !== ownerid) return message.reply(`Bạn phải là admin để sử dụng lệnh này`);
         const User = message.mentions.members.first();
         if (!User) return message.reply(`Không nhận dạng được người dùng này`);
         blacklist.findOne({ id: User.user.id }, async (err, data) => {

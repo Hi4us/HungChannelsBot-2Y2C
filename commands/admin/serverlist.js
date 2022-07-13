@@ -11,7 +11,7 @@ module.exports = {
   description: `Xem các server sử dụng bot(chỉ admin sử dụng)`,
   usage: `${process.env.DISCORD_PREFIX}serverlist`,
   run: async (client, message, args) => {
-    if (!message.author.id === ownerid) return message.reply(`Bạn phải là admin để sử dụng lệnh này`);
+    if (message.author.id !== ownerid) return message.reply(`Bạn phải là admin để sử dụng lệnh này`);
     let i0 = 0;
     let i1 = 10;
     let page = 1;

@@ -1,12 +1,15 @@
 // minecraftbot.js File
 // Code by Hùng Channels
 // #Discord.js #V13 #HungChannels #Code
+require('dotenv').config();
 const mineflayer = require('mineflayer');
 const tpsPlugin = require('mineflayer-tps')(mineflayer);
 const util = require('minecraft-server-util');
-const ms = require('ms');
 const { Client, MessageEmbed, Message } = require('discord.js');
+const ms = require('ms');
 const { env } = require('process');
+const { ownerid, livechat } = require('../config.json');
+const blacklist = require('../models/blacklist.js');
 const info = {
     name: env.MC_NAME,
     pass: env.MC_PASS,
@@ -14,12 +17,17 @@ const info = {
     ip: env.MC_IP,
     port: env.MC_PORT
 };
-require('dotenv').config();
-const { ownerid, livechat1, livechat2 } = require('../config.json');
-const blacklist = require('../models/blacklist.js');
+const color = {
+    red: '#f00c0c',
+    yellow: '#e5f00c',
+    green: '#07fc03',
+    pink: '#ff17bd',
+    blue: '#09bced',
+    purple: '#a009e0',
+    blue2: '#094ded'
+};
 
 /**
- *
  * @param {Client} client
  */
 function createBot(client) {
@@ -28,7 +36,7 @@ function createBot(client) {
 
     const minecraftbot = mineflayer.createBot({
         host: info.ip,
-        port: 25565,
+        // port: info.port,
         username: info.name,
         version: info.version,
         plugins: {
@@ -41,32 +49,33 @@ function createBot(client) {
     // Log when login
 
     let click = false
-        , end = false
-        , connect = 0
-        , move = 0
-        , login = false
-        , err = 0
-        , logintime = 0
+    let end = false
+    let connect = 0
+    let move = 0
+    let login = false
+    let err = 0
+    let prepare = false
+    let restart = false
+    let logintime = 0
 
     /**
-     * 
      * @param {MessageEmbed} embed 
      * @param {Message} msg
      * @param {String} color
      */
     async function send(embed, msg, color) {
         if (embed) {
-            const channel1 = client.channels.cache.get(livechat1);
-            const channel2 = client.channels.cache.get(livechat2);
-            const channel3 = client.channels.cache.get(livechat3);
-            if (!channel1 || !channel2 || !channel3) return;
-            channel1.send({ embeds: [embed] });
-            channel2.send({ embeds: [embed] });
-            channel3.send({ embeds: [embed] });
+            const channel = client.channels.cache.get(livechat);
+            if (!channel) return;
+            try {
+                if (embed && embed !== '') channel.send({ embeds: [embed] })
+                else channel.send(await codeblockGenerator(msg, color))
+            } catch (e) {
+                console.log(e)
+            }
         }
     }
     /**
-     * 
      * @param {String} msg 
      * @param {String} color 
      * @returns 
@@ -93,26 +102,14 @@ function createBot(client) {
         }
     }
     /**
-     * 
-     * @param {Number} rejoin 
+     * @param {String} time 
+     * @param {Boolean} now 
      */
-    function reconnect(rejoin) {
-        setTimeout(async () => {
-            const embed = new MessageEmbed()
-                .setTitle('Đang kết nối lại với ' + info.ip + ' ...')
-                .setColor('#ffe021')
-            send(embed, embed.title ? embed.title : embed.description, 'orange')
-            createBot(client, 'mc');
-        }, ms(`${rejoin}m`));
-    }
-    /**
-     * 
-     * @param {String} pass 
-     */
-
     minecraftbot.on('login', async () => {
         move++
         end = false
+        prepare = false
+        restart = false
         let server = ''
         logintime++
         if (move == 1) { server = 'Pin'; minecraftbot.afk.stop() }
@@ -122,20 +119,19 @@ function createBot(client) {
             move = 0;
             err = 0
             setTimeout(() => {
-                if (end === 'true') { return; }
+                if (end === true) { return; }
                 else {
                     minecraftbot.afk.start();
                 }
                 const embed = new MessageEmbed()
                     .setTitle('Bắt đầu afk')
-                    .setColor('GREY') // Xanh lá
+                    .setColor('GREY')
                 send(embed, 'Bắt đầu AFK', 'gray')
             }, 15000);
         }
         const embed1 = new MessageEmbed()
-            .setTitle('Đã kết nối với server ' + server)
-            .setColor('#07fc03') // Xanh lá
-
+            .setTitle(`Đã kết nối với server ${server}`)
+            .setColor(color.green)
         send(embed1, embed1.title ? embed1.title : embed1.description, 'green')
     });
 
@@ -143,170 +139,150 @@ function createBot(client) {
     // From MoonU
     minecraftbot.on('windowOpen', async (window) => {
         if (Number(window.slots.length) == 63 || Number(window.slots.length) == 62) {
-
             const embed = new MessageEmbed()
                 .setTitle('Cửa sổ `Chuyển Server` mở')
-                .setColor('#07fc03') // Xanh lá
-
+                .setColor(color.green)
             send(embed, embed.title ? embed.title : embed.description, 'green')
-
             minecraftbot.simpleClick.leftMouse(10);
-
             const embed1 = new MessageEmbed()
                 .setTitle('Đã click vào cửa sổ `Chuyển Server`')
-                .setColor('#07fc03') // Xanh lá
-
+                .setColor(color.green)
             send(embed1, embed1.title ? embed1.title : embed1.description, 'green')
-
         } else if (Number(window.slots.length) == 45 || Number(window.slots.length) == 46) {
             const embed = new MessageEmbed()
                 .setTitle('Cửa sổ `Nhập PIN` mở')
-                .setColor('#07fc03') // Xanh lá
+                .setColor(color.green)
             send(embed, embed.title ? embed.title : embed.description, 'green')
-
             click = true;
-
             window.requiresConfirmation = false;
-
             const pass = info.pass.split(' ')
-
             const p1 = pass[0];
             const p2 = pass[1];
             const p3 = pass[2];
             const p4 = pass[3];
-
             minecraftbot.simpleClick.leftMouse(Number(p1));
             minecraftbot.simpleClick.leftMouse(Number(p2));
             minecraftbot.simpleClick.leftMouse(Number(p3));
             minecraftbot.simpleClick.leftMouse(Number(p4));
-
             const embed1 = new MessageEmbed()
                 .setTitle('Đã nhập mật khẩu')
-                .setColor('#07fc03') // Xanh lá
+                .setColor(color.green)
             send(embed1, embed1.title ? embed1.title : embed1.description, 'green')
         }
     });
 
     // Livechat ingame (Mineflayer)
     // Phân loại
+
+    // CHat thường
     const chat = /$<(.+)> (.+)^/;
+
     // Whisper
-    const chat1 = /^nhắn cho (.+): (.+)$/;
-    const chat2 = /^(.+) nhắn: (.+)$/;
+    const whisper1 = /^nhắn cho (.+): (.+)$/;
+    const whisper2 = /^(.+) nhắn: (.+)$/;
 
     // Error
-    const chat3 = /^Unknown command$/;
-    const chat4 = /^Kicked whilst connecting to (.+)$/;
-    const chat5 = /^Could not connect to a default or fallback server, please try again later:(.+)$/;
-    const chat9 = /^Oops something went wrong... Putting you back in queue.$/;
-    const chat10 = /^Exception Connecting:ReadTimeoutException : null$/;
-    const chat12 = /^CommandWhitelist > No such command.$/;
+    const error1 = /^Unknown command$/;
+    const error2 = /^Kicked whilst connecting to (.+)$/;
+    const error3 = /^Could not connect to a default or fallback server, please try again later:(.+)$/;
+    const error4 = /^Oops something went wrong... Putting you back in queue.$/;
+    const error5 = /^Exception Connecting:ReadTimeoutException : null$/;
+    const error6 = /^CommandWhitelist > No such command.$/;
 
     // Donater
-    const chat6 = /^[Broadcast] (.+) (?:đạt mốc nạp|vừa ủng hộ) (.+)$/;
+    const donater = /^[Broadcast] (.+) (?:đạt mốc nạp|vừa ủng hộ) (.+)$/;
 
-    // Bot
-    const chat7 = /^<HungChannelsBot>(.+)$/;
-    const chat8 = /^<0DieuAnh>(.+)$/;
-
-    // Admin
-    const chat11 = /^<HungChannels_TV>(.+)$/;
-    const chat13 = /^(.+) HungChannels_TV$/;
+    //Sleep
+    const sleepchat = /^(.+) players sleeping$/
 
     minecraftbot.on('message', async (message) => {
-        // console.log(message.toString())
-        if (chat1.test(message.toString()) || chat2.test(message.toString())) {
+        if (whisper1.test(message.toString())
+            || whisper2.test(message.toString())) {
             const embed = new MessageEmbed()
                 .setDescription(`${message.toString()}`)
-                .setColor('#ff17bd') // Hồng cánh sen mộng mer
+                .setColor(color.pink)
             send(embed, embed.title ? embed.title : embed.description, 'blue')
         }
-        else if (chat3.test(message.toString()) || chat4.test(message.toString()) || chat5.test(message.toString()) || chat9.test(message.toString()) || chat10.test(message.toString()) || chat12.test(message.toString())) {
+        else if (error1.test(message.toString())
+            || error2.test(message.toString())
+            || error3.test(message.toString())
+            || error4.test(message.toString())
+            || error5.test(message.toString())
+            || error6.test(message.toString())
+        ) {
             const embed = new MessageEmbed()
                 .setDescription(`${message.toString()}`)
-                .setColor('#f00c0c') // Đỏ
-
+                .setColor(color.red)
             send(embed, embed.title ? embed.title : embed.description, 'red')
-        }
-        else if (chat9.test(message.toString())) {
-            err++
-            if (err >= 5) { minecraftbot.end('Không thể kết nối với server `Chính`'); err = 0 }
+            if (error4.test(message.toString())) {
+                err++
+                if (err >= 5) { minecraftbot.end('Không thể kết nối với server `Chính`'); err = 0 }
+            }
         }
         else if (message.getText().toLowerCase().trim() === 'dùng lệnh/2y2c  để vào server.') {
             connect++;
             const embed = new MessageEmbed()
                 .setDescription(`${message.toString()}`)
-                .setColor('#09bced') // Xanh dương
-
+                .setColor(color.blue)
             send(embed, embed.title ? embed.title : embed.description, 'blue')
-
             function connectServer(click, end, minecraftbot) {
                 if (click === true && end === false) {
                     minecraftbot.chat('/2y2c');
                     const embed1 = new MessageEmbed()
                         .setTitle('Đã nhập `/2y2c`')
-                        .setColor('#07fc03') // Xanh lá
-
+                        .setColor(color.green)
                     send(embed1, embed1.title ? embed1.title : embed1.description, 'green')
                 }
             }
             if (connect == 2) {
                 connectServer(click, end, minecraftbot);
-            }
-            else if (connect < 2 && connect > 2 && connect < 8) {
+            } else if (connect < 2 && connect > 2 && connect < 8) {
                 return;
-            }
-            else if (connect = 8) {
+            } else if (connect = 8) {
                 connectServer(click, end, minecraftbot);
-            }
-            else if (connect > 8) {
+            } else if (connect > 8) {
                 minecraftbot.end('Không thể kết nối với server `Hàng chờ`');
             }
-        }
-        else if (chat6.test(message.toString())) {
+        } else if (donater.test(message.toString())) {
             const embed = new MessageEmbed()
                 .setDescription(`${message.toString()}`)
-                .setColor('#a009e0') // Tím mộng mer
+                .setColor(color.purple)
             send(embed, embed.title ? embed.title : embed.description, 'blue')
-        }
-        else if (message.toString() === 'The main server is down. We will be back soon!') {
+        } else if (message.toString() === 'The main server is down. We will be back soon!') {
             const embed = new MessageEmbed()
                 .setDescription(`${message.toString()}`)
-                .setColor('#f00c0c');
-            send(embed, embed.title ? embed.title : embed.description, 'blue')
+                .setColor(color.red);
+            send(embed, embed.title ? embed.title : embed.description, 'red')
             setTimeout(() => { minecraftbot.end('Server Restart'); }, 5000);
-        }
-        else if (!chat1.test(message.toString()) || !chat2.test(message.toString()) || !chat3.test(message.toString()) || !chat4.test(message.toString()) || !chat6.test(message.toString())) {
+        } else if (sleepchat.test(message.toString())) {
+            return
+        } else {
+            if (message.toString() === '') return
             if (login === false && chat.test(message.toString())) {
                 login === true;
                 minecraftbot.afk.stop()
                 setTimeout(() => {
-                    if (end === 'true') { return; }
+                    if (end === true) { return; }
                     else {
+                        end
                         minecraftbot.afk.start();
                         const embed = new MessageEmbed()
                             .setTitle('Bắt đầu afk')
-                            .setColor('GREY') // Xanh lá
-
+                            .setColor('GREY')
                         send(embed, 'Bắt đầu AFK', 'gray')
                     }
                 }, 15000);
             }
             const embed = new MessageEmbed()
                 .setDescription(`${message.toString()}`);
-            if (message.toString().split(' ').shift() === `<${minecraftbot.player.username}>`) {
-                embed.setColor('#094ded');
-            } else if (chat7.test(message.toString()) || chat8.test(message.toString())) {
-                embed.setColor('#094ded');
-            } else if (chat11.test(message.toString()) || chat13.test(message.toString())) {
-                embed.setColor('ff0080');
+            if (message.toString().split(' ').shift() === `<${info.name}}>`) {
+                embed.setColor(color.blue2);
             } else {
-                embed.setColor('#09bced');
+                embed.setColor(color.blue);
             }
             send(embed, embed.title ? embed.title : embed.description, 'blue')
         }
     });
-
     // Random number
     function random() {
         let random1 = Math.floor(Math.random() * 10)
@@ -324,7 +300,7 @@ function createBot(client) {
         blacklist.findOne({ id: message.author.id }, async (err, data) => {
             if (err) throw err;
             if (!data) {
-                if (message.channel.id === livechat1 || message.channel.id === livechat2) {
+                if (message.channel.id === livechat) {
                     if (message.content.startsWith(prefix)) return;
                     if (message.author.id === ownerid) {
                         message.react('✅');
@@ -351,38 +327,41 @@ function createBot(client) {
                 } else if (cmd === 'playeronline' || cmd === 'playersonline' || cmd === 'ponl' || cmd === 'po') {
                     message.channel.send(`Hiện có ${Object.values(minecraftbot.players).map(name => name.username).length} đang chơi trong ${info.ip}`);
                 } else if (cmd === 'adminchat') {
-                    if (!message.author.id === ownerid) {
-                        message.reply(`Bạn phải là admin để sử dụng lệnh này`);
-                    } else {
-                        if (!args.length) return;
-                        message.react('✅');
-                        minecraftbot.chat(args.join(' '));
-                    }
+                    if (message.author.id !== ownerid) return message.reply(`Bạn phải là admin để sử dụng lệnh này`);
+                    if (!args.length) return;
+                    message.react('✅');
+                    minecraftbot.chat(args.join(' '));
                 }
             }
         })
     });
+
     // Login when kicked
 
-    var kickcount = 0;
-    let rejoin = 0;
+    var kickcount = 0
+    var rejoin = 0
     minecraftbot.on('end', (reason) => {
         end = true;
+        let res = reason
         if (kickcount < 2) { rejoin = 5; kickcount++ }
         else { rejoin = 5; }
-        if (reason.toString().toLowerCase == 'Server Restart') rejoin = 15;
+        if (reason.toString().toLowerCase() == 'Server Restart') { rejoin = 5; restart = true }
+        if (prepare === true && reason.toString().toLowerCase() == 'Server Restart') restartsend('', true)
         const embed = new MessageEmbed()
-            .setDescription(`**Bot đã mất kết nối đến server ${info.ip}, lí do: \`${reason}\`, kết nối lại sau ${rejoin} phút**`)
-            .setColor('#f00c0c') // Đỏ
-        console.log(`[2Y2C] Bot mất kết nối server, lý do: ${reason}, kết nối lại sau ${rejoin} phút`)
+            .setDescription(`**Bot đã mất kết nối đến server ${info.ip}, lí do: \`${res}\`, kết nối lại sau ${rejoin} phút**`)
+            .setColor('#f00c0c')
         send(embed, embed.title ? embed.title : embed.description, 'red')
-        reconnect(rejoin)
+        console.log(`[2Y2C] Bot mất kết nối server, lí do: ${res}, kết nối lại sau ${rejoin} phút`)
+        setTimeout(async () => {
+            const embed = new MessageEmbed()
+                .setDescription(`Đang kết nối lại với ${info.ip} ...`)
+                .setColor(color.yellow)
+            send(embed, embed.title ? embed.title : embed.description, 'orange')
+            createBot(client);
+        }, ms(`${rejoin}m`));
     });
-
     /**
-    *
     * Command của bot ingame
-    *
     */
     // Server
     minecraftbot.addChatPattern('server', /<(.+)> (?:og.server|!server)/, { parse: true });
@@ -407,12 +386,13 @@ function createBot(client) {
             minecraftbot.chat(`> Tổng người chơi: ${response.onlinePlayers}/${response.maxPlayers} | HungChannels_TV | ${randomnum}`);
         });
     });
-    // Help
+    // Botinfo
     minecraftbot.addChatPattern('botinfo', /<(.+)> (?:og.botinfo|og.bi|!botinfo|!bi)/, { parse: true });
     minecraftbot.on('chat:botinfo', async (message) => {
         const randomnum = await random()
         minecraftbot.chat(`> WSPing: ${client.ws.ping}ms | Uptime: ${ms(client.uptime)} | HungChannels_TV | ${randomnum}`);
     });
+    // Help
     minecraftbot.addChatPattern('help', /<(.+)> (?:og.help|!help)/, { parse: true });
     minecraftbot.on('chat:help', async () => {
         const randomnum = await random()
@@ -472,8 +452,7 @@ function createBot(client) {
             const deathcount = Number(data.death) + 1;
             if (data.firstdeath === 'No data') {
                 kd.findOneAndUpdate({ username: victim }, { $set: { firstdeath: message, lastdeath: message, death: deathcount } });
-            }
-            else if (data.firstdeath !== 'No data' && data.lastdeath !== 'No data') {
+            } else if (data.firstdeath !== 'No data' && data.lastdeath !== 'No data') {
                 kd.findOneAndUpdate({ username: victim }, { $set: { lastdeath: message, death: deathcount } });
             }
         } else {
@@ -497,8 +476,7 @@ function createBot(client) {
             const killcount = Number(data.kill) + 1;
             if (data.firstdeath === 'No data') {
                 await kd.findOneAndUpdate({ username: killer }, { $set: { firstkill: message, lastkill: message, kill: killcount } });
-            }
-            else if (data.firstkill !== 'No data' && data.lastkill !== 'No data') {
+            } else if (data.firstkill !== 'No data' && data.lastkill !== 'No data') {
                 await kd.findOneAndUpdate({ username: killer }, { $set: { lastkill: message, kill: killcount } });
             }
         } else {
@@ -526,215 +504,146 @@ function createBot(client) {
             const killer = `${kill1.exec(str)[2]}`;
             const weapon = `${kill1.exec(str)[3]}`;
             const message = `${victim} bị giết bởi ${killer} dùng ${weapon}`;
-            // Victim
             victimWriter(victim, message, kd)
-            // Killer
             killerWriter(killer, message, kd)
-        }
-        else if (kill2.test(str)) {
+        } else if (kill2.test(str)) {
             const victim = `${kill2.exec(str)[1]}`;
             const killer = `${kill2.exec(str)[2]}`;
             const message = `${victim} bị đẩy xuống vực ${killer}`;
-            // Victim
             victimWriter(victim, message, kd)
-            // Killer
             killerWriter(killer, message, kd)
-        }
-        else if (kill3.test(str)) {
+        } else if (kill3.test(str)) {
             const victim = `${kill3.exec(str)[1]}`;
             const message = `${victim} chết ngạt vì đéo biết bơi`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill4.test(str)) {
+        } else if (kill4.test(str)) {
             const victim = `${kill4.exec(str)[1]}`;
             const message = `${victim} bị thông đít đến chết`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill5.test(str)) {
+        } else if (kill5.test(str)) {
             const victim = `${kill5.exec(str)[1]}`;
             const message = `${victim} chết đói`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill6.test(str)) {
+        } else if (kill6.test(str)) {
             const victim = `${kill6.exec(str)[1]}`;
             const message = `${victim} cứ nghĩ cháy là ngầu`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill7.test(str)) {
+        } else if (kill7.test(str)) {
             const victim = `${kill7.exec(str)[1]}`;
             const message = `${victim} té đập con mẹ nó mặt`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill8.test(str)) {
+        } else if (kill8.test(str)) {
             const victim = `${kill8.exec(str)[1]}`;
             const message = `${victim} bú cu tự sát`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill9.test(str)) {
+        } else if (kill9.test(str)) {
             const victim = `${kill9.exec(str)[1]}`;
             const message = `${victim} Tập bơi trong lava`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill10.test(str)) {
+        } else if (kill10.test(str)) {
             const victim = `${kill10.exec(str)[1]}`;
             const message = `${victim} đang leo thì té khỏi dây leo`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill11.test(str)) {
+        } else if (kill11.test(str)) {
             const victim = `${kill11.exec(str)[1]}`;
             const killer = `${kill11.exec(str)[2]}`;
             const message = `${victim} bị giết bởi ${killer}`;
-            // Victim
             victimWriter(victim, message, kd)
-            // Killer
             killerWriter(killer, message, kd)
-        }
-        else if (kill12.test(str)) {
+        } else if (kill12.test(str)) {
             const victim = `${kill12.exec(str)[1]}`;
             const message = `${victim} đập mặt vào cột điện`;
-            // Victim
             kvictimWriter(victim, message, kd)
-        }
-        else if (kill13.test(str)) {
+        } else if (kill13.test(str)) {
             const victim = `${kill13.exec(str)[1]}`;
             const message = `${victim} nghĩ rằng cậu ấy bơi được hoài`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill14.test(str)) {
+        } else if (kill14.test(str)) {
             const victim = `${kill14.exec(str)[1]}`;
             const message = `${victim} chết cháy`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill15.test(str)) {
+        } else if (kill15.test(str)) {
             const victim = `${kill15.exec(str)[1]}`;
             const message = `${victim} đang leo thì té khỏi thang`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill16.test(str)) {
+        } else if (kill16.test(str)) {
             const victim = `${kill16.exec(str)[1]}`;
             const killer = `${kill16.exec(str)[2]}`;
             const weapon = `${kill16.exec(str)[3]}`;
             const message = `${victim} bị bắn bởi ${killer} sử dụng ${weapon}`;
-            // Victim
             victimWriter(victim, message, kd)
-            // Killer
             killerWriter(killer, message, kd)
-        }
-        else if (kill17.test(str)) {
+        } else if (kill17.test(str)) {
             const victim = `${kill17.exec(str)[2]}`;
             const killer = `${kill17.exec(str)[1]}`;
             const weapon = `${kill17.exec(str)[3]}`;
             const message = `${killer} đã giết ${victim} dùng ${weapon}`;
-            // Victim
             victimWriter(victim, message, kd)
-            // Killer
             killerWriter(killer, message, kd)
-        }
-        else if (kill18.test(str)) {
+        } else if (kill18.test(str)) {
             const victim = `${kill18.exec(str)[1]}`;
             const killer = `${kill18.exec(str)[2]}`;
             const message = `${victim} bị giết bởi ${killer}`;
-            // Victim
             victimWriter(victim, message, kd)
-            // Killer
             killerWriter(killer, message, kd)
-        }
-        else if (kill19.test(str)) {
+        } else if (kill19.test(str)) {
             const victim = `${kill19.exec(str)[1]}`;
             const killer = `${kill19.exec(str)[2]}`;
             const weapon = `${kill19.exec(str)[3]}`;
             const message = `${victim} đã giết hại ${killer} bẳng ${weapon}`;
-            // Victim
             victimWriter(victim, message, kd)
-            // Killer
             killerWriter(killer, message, kd)
-        }
-        else if (kill20.test(str)) {
+        } else if (kill20.test(str)) {
             const victim = `${kill13.exec(str)[1]}`;
             const message = `${victim} chết khi tắm xông hơi`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill21.test(str)) {
+        } else if (kill21.test(str)) {
             const victim = `${kill21.exec(str)[1]}`;
             const message = `${victim} bóp chim tự tử`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill22.test(str)) {
+        } else if (kill22.test(str)) {
             const killer = `${kill22.exec(str)[2]}`;
             const victim = `${kill22.exec(str)[1]}`;
             const message = `${victim} nổ banh xác ${killer} bằng tnt`;
-            // Victim
             victimWriter(victim, message, kd)
-            // Killer
             killerWriter(killer, message, kd)
-        }
-        else if (kill23.test(str)) {
+        } else if (kill23.test(str)) {
             const victim = `${kill23.exec(str)[1]}`;
             const message = `${victim} was blown up by a Creeper`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill24.test(str)) {
+        } else if (kill24.test(str)) {
             const victim = `${kill24.exec(str)[1]}`;
             const message = `${victim} nổ banh chim`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill25.test(str)) {
+        } else if (kill25.test(str)) {
             const victim = `${kill25.exec(str)[1]}`;
             const killer = `${kill25.exec(str)[2]}`;
             const weapon = `${kill25.exec(str)[3]}`;
             const message = `${victim} bị giết bởi ${killer} dùng ${weapon}`;
-            // Victim
             victimWriter(victim, message, kd)
-            // Killer
             killerWriter(killer, message, kd)
-        }
-        else if (kill26.test(str)) {
+        } else if (kill26.test(str)) {
             const victim = `${kill26.exec(str)[1]}`;
             const message = `${victim} bị sét đánh`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill27.test(str)) {
+        } else if (kill27.test(str)) {
             const victim = `${kill27.exec(str)[1]}`;
             const message = `${victim} bì đè chết bởi đe`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill28.test(str)) {
+        } else if (kill28.test(str)) {
             const victim = `${kill28.exec(str)[1]}`;
             const message = `${victim} ngủ dưới nether :kappa:`;
-            // Victim
             victimWriter(victim, message, kd)
-        }
-        else if (kill29.test(str)) {
+        } else if (kill29.test(str)) {
             const victim = `${kill29.exec(str)[1]}`;
             const killer = `${kill29.exec(str)[2]}`;
             const weapon = `${kill29.exec(str)[3]}`;
             const message = `${victim} bị hội đồng bởi ${killer} dùng ${weapon}`;
-            // Victim
             victimWriter(victim, message, kd)
-            // Killer
             killerWriter(killer, message, kd)
-        }
-        else if (kill30.test(str)) {
+        } else if (kill30.test(str)) {
             const victim = `${kill30.exec(str)[1]}`;
             const message = `${victim} bị bốc hơi`;
-            // Victim
             victimWriter(victim, message, kd)
         }
     });
@@ -760,26 +669,22 @@ function createBot(client) {
                     if (data) {
                         const kdpoint = data.kill / data.death;
                         minecraftbot.chat(`/w ${username} Kill: ${data.kill} | Death: ${data.death} | K/D: ${kdpoint} | ${randomnum}`);
-                    }
-                    else {
+                    } else {
                         minecraftbot.chat(`/w ${username} Không tìm thấy data`);
                     }
                 });
-            }
-            else {
+            } else {
                 kd.findOne({ username: `${fullname}` }, async (err, data) => {
                     if (err) throw err;
                     if (data) {
                         const kdpoint = data.kill / data.death;
                         minecraftbot.chat(`/w ${fullname} Kill: ${data.kill} | Death: ${data.death} | K/D: ${kdpoint} | ${randomnum}`);
-                    }
-                    else {
+                    } else {
                         minecraftbot.chat(`/w ${fullname} Không tìm thấy data`);
                     }
                 });
             }
-        }
-        else if (jdcommand.test(msg.toString())) {
+        } else if (jdcommand.test(msg.toString())) {
             const fullname = jdcommand.exec(text)[1];
             const userlenght = fullname.length - 9;
             const username = fullname.slice(-userlenght);
@@ -789,25 +694,21 @@ function createBot(client) {
                     if (err) throw err;
                     if (data) {
                         minecraftbot.chat(`/w ${username} Dữ liệu được tạo từ ${data.joinDate}`);
-                    }
-                    else {
+                    } else {
                         minecraftbot.chat(`/w ${username} Không tìm thấy data`);
                     }
                 });
-            }
-            else {
+            } else {
                 kd.findOne({ username: `${fullname}` }, async (err, data) => {
                     if (err) throw err;
                     if (data) {
                         minecraftbot.chat(`/w ${fullname} Dữ liệu được tạo từ ${data.joinDate}`);
-                    }
-                    else {
+                    } else {
                         minecraftbot.chat(`/w ${fullname} Không tìm thấy data`);
                     }
                 });
             }
-        }
-        else if (lastkill.test(str)) {
+        } else if (lastkill.test(str)) {
             const fullname = lastkill.exec(text)[1];
             const userlenght = fullname.length - 9;
             const username = fullname.slice(-userlenght);
@@ -817,13 +718,11 @@ function createBot(client) {
                     if (err) throw err;
                     if (data) {
                         minecraftbot.chat(`/w ${username} Lastkill: ${data.lastkill}`);
-                    }
-                    else {
+                    } else {
                         minecraftbot.chat(`/w ${username} Không tìm thấy data`);
                     }
                 });
-            }
-            else {
+            } else {
                 kd.findOne({ username: `${fullname}` }, async (err, data) => {
                     if (err) throw err;
                     if (data) {
@@ -834,8 +733,7 @@ function createBot(client) {
                     }
                 });
             }
-        }
-        else if (firstkill.test(str)) {
+        } else if (firstkill.test(str)) {
             const fullname = firstkill.exec(text)[1];
             const userlenght = fullname.length - 9;
             const username = fullname.slice(-userlenght);
@@ -850,20 +748,17 @@ function createBot(client) {
                         minecraftbot.chat(`/w ${username} Không tìm thấy data`);
                     }
                 });
-            }
-            else {
+            } else {
                 kd.findOne({ username: `${fullname}` }, async (err, data) => {
                     if (err) throw err;
                     if (data) {
                         minecraftbot.chat(`/w ${fullname} Firstkill: ${data.firstkill}`);
-                    }
-                    else {
+                    } else {
                         minecraftbot.chat(`/w ${fullname} Không tìm thấy data`);
                     }
                 });
             }
-        }
-        else if (lastdeath.test(str)) {
+        } else if (lastdeath.test(str)) {
             const fullname = lastdeath.exec(text)[1];
             const userlenght = fullname.length - 9;
             const username = fullname.slice(-userlenght);
@@ -873,25 +768,21 @@ function createBot(client) {
                     if (err) throw err;
                     if (data) {
                         minecraftbot.chat(`/w ${username} Lastdeath: ${data.lastdeath}`);
-                    }
-                    else {
+                    } else {
                         minecraftbot.chat(`/w ${username} Không tìm thấy data`);
                     }
                 });
-            }
-            else {
+            } else {
                 kd.findOne({ username: `${fullname}` }, async (err, data) => {
                     if (err) throw err;
                     if (data) {
                         minecraftbot.chat(`/w ${fullname} Lastdeath: ${data.lastdeath}`);
-                    }
-                    else {
+                    } else {
                         minecraftbot.chat(`/w ${fullname} Không tìm thấy data`);
                     }
                 });
             }
-        }
-        else if (firstdeath.test(str)) {
+        } else if (firstdeath.test(str)) {
             const fullname = firstdeath.exec(text)[1];
             const userlenght = fullname.length - 9;
             const username = fullname.slice(-userlenght);
@@ -901,19 +792,16 @@ function createBot(client) {
                     if (err) throw err;
                     if (data) {
                         minecraftbot.chat(`/w ${username} Firstdeath: ${data.firstdeath}`);
-                    }
-                    else {
+                    } else {
                         minecraftbot.chat(`/w ${username} Không tìm thấy data`);
                     }
                 });
-            }
-            else {
+            } else {
                 kd.findOne({ username: `${fullname}` }, async (err, data) => {
                     if (err) throw err;
                     if (data) {
                         minecraftbot.chat(`/w ${fullname} Firstdeath: ${data.firstdeath}`);
-                    }
-                    else {
+                    } else {
                         minecraftbot.chat(`/w ${fullname} Không tìm thấy data`);
                     }
                 });

@@ -11,7 +11,7 @@ module.exports = {
     description: `Bỏ cấm người dùng sử dụng bot(chỉ admin sử dụng)`,
     usage: `${process.env.DISCORD_PREFIX}removeblacklist <id>`,
     run: async (client, message, args) => {
-        if (!message.author.id === ownerid) return message.reply(`Bạn phải là admin để sử dụng lệnh này`);
+        if (message.author.id !== ownerid) return message.reply(`Bạn phải là admin để sử dụng lệnh này`);
         const User = message.mentions.members.first();
         if (!User) return message.reply(`Không nhận dạng được người dùng này`);
         blacklist.findOne({ id: User.user.id }, async (err, data) => {

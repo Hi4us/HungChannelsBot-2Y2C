@@ -10,7 +10,7 @@ module.exports = {
     description: `Load lại toàn bộ lệnh(chỉ admin sử dụng)`,
     usage: `${process.env.DISCORD_PREFIX}reload`,
     run: async (client, message, args) => {
-        if (!message.author.id === ownerid) return message.reply(`Bạn phải là admin để sử dụng lệnh này`);
+        if (message.author.id !== ownerid) return message.reply(`Bạn phải là admin để sử dụng lệnh này`);
         if (process.env.TYPE_RUN == 'production') client.shard.respawnAll();
         else {
             await client.commands.clear();

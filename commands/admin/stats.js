@@ -11,7 +11,7 @@ module.exports = {
   description: `Xem trạng thái bot(chỉ admin sử dụng)`,
   usage: `${process.env.DISCORD_PREFIX}stats`,
   run: async (client, message, args) => {
-    if (!message.author.id === ownerid) return message.reply(`Bạn phải là admin để sử dụng lệnh này`);
+    if (message.author.id !== ownerid) return message.reply(`Bạn phải là admin để sử dụng lệnh này`);
     let totalSeconds = message.client.uptime / 1000;
     let days = Math.floor(totalSeconds / 86400);
     totalSeconds %= 86400;
