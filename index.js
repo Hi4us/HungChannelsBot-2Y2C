@@ -12,7 +12,7 @@ const giveawayModel = require('./models/giveaways.js');
 const Levels = require('discord-xp');
 const { DisTube } = require('distube');
 
-// Không được xóa từ dòng 16 đến dòng 34 không bot sẽ không chạy, bạn chỉ việc sửa lại token và thông tin tại config.json và .env
+// Không được xóa từ dòng 16 đến dòng 35 không bot sẽ không chạy, bạn chỉ việc sửa lại token và thông tin tại config.json và .env
 let hungchannelstv = '364714303351160833'
 // Check admin
 const HungChannels = client.users.fetch(ownerid);
@@ -20,10 +20,11 @@ const config = require('./config.json')
 console.log(`[CONFIG] Đã load thành công file config.json`)
 if (hungchannelstv === '364714303351160833') {
     console.log(`[CHECK] Đã xác minh thành công`)
-    console.log(`[ADMIN] https://www.facebook.com/HungChannels.TV`)
     console.log(`[ADMIN] Thanks to https://github.com/phamleduy04, https://github.com/MoonVN571, https://github.com/VaitoSoi`)
     console.log(`[ADMIN] So many thanks to @0Channy, @BuronKanzaki`)
     console.log(`[ADMIN] And then say goodbye 2y2c`)
+    console.log(`[ADMIN] Nếu có lỗi hãy liên hệ Hùng Channels#0669`)
+    console.log(`[ADMIN] https://www.facebook.com/HungChannels.TV`)
     console.log(`[DISCORD.JS] Bạn đang sử dụng discord.js phiên bản ${version}`)
     try { require('dotenv').config() }
     catch (e) { console.log(`[ERROR] Đã xảy ra lỗi khi login, lỗi: ${e}`) }
