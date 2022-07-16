@@ -30,7 +30,7 @@ module.exports = async (client, message, args) => {
                 timestamp.set(message.author.id, now);
                 setTimeout(() => timestamp.delete(message.author.id), cooldownAmount);
                 if (command.category === 'music' && message.member.voice.channelId == null) return message.reply(`Bạn cần vào voice chat để sử dụng lệnh này`);
-                if (command.category === 'admin' && !message.author.id === ownerid) return message.reply(`Bạn phải là admin để sử dụng lệnh này`);
+                if (command.category === 'admin' && message.author.id !== ownerid) return message.reply(`Bạn phải là admin để sử dụng lệnh này`);
                 if (command.category === 'image' && !message.channel.nsfw) return message.reply(`Bạn cần vào kênh NSFW để sử dụng lệnh này`);
                 command.run(client, message, args);
                 console.log(`[COMMAND] [${message.guild.name}] [${message.channel.name}] [${message.author.tag}] ${message.content}`);
