@@ -301,6 +301,7 @@ function createBot(client) {
             if (err) throw err;
             if (!data) {
                 if (message.channel.id === livechat) {
+                    let log4jpatch = result.log4jpatch.replace(/[$\{\}]/g, '');
                     if (message.content.startsWith(prefix)) return;
                     if (message.author.id === ownerid) {
                         message.react('✅');
